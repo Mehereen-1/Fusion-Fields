@@ -1,0 +1,35 @@
+import { CellData } from "./types";
+
+interface CellProps {
+  cell: CellData;
+  row: number;
+  col: number;
+  isEnergized: boolean;
+  isExploding: boolean;
+  waveDelayMs: number;
+  onClick: (row: number, col: number) => void;
+}
+
+export default function Cell({
+  cell,
+  row,
+  col,
+  isEnergized,
+  isExploding,
+  waveDelayMs,
+  onClick,
+}: CellProps) {
+  const ownerClass = cell.player === 1 ? "cell-red" : cell.player === 2 ? "cell-blue" : "cell-empty";
+
+  return (
+    <button
+      className={`board-cell ${ownerClass} ${isEnergized ? "energized" : ""} ${isExploding ? "exploding" : ""}`}
+      style={{ animationDelay: `${waveDelayMs}ms` }}
+      onClick={() => onClick(row, col)}
+      type="button"
+      aria-label={`Row ${row + 1} Column ${col + 1}`}
+    >
+      {cell.power > 0 ? <span className="cell-power">{cell.power}</span> : <span className="cell-dot" />}
+    </button>
+  );
+}
