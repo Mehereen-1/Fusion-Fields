@@ -1,62 +1,29 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import "./App.css";
+import { chooseFuzzyMove } from "./fuzzy";
 import GameBoard from "./GameBoard";
+import {
+  applyMoveWithEffects,
+  computeScores,
+  createEmptyBoard,
+  getValidMoves,
+  getWinner,
+} from "./gameLogic";
 import ResultScreen from "./ResultScreen";
 import StartScreen from "./StartScreen";
-import { BoardData, Move, Player, Scores } from "./types";
+import { BoardData, Move, Player } from "./types";
 
 const SIZE = 5;
-const EXPLOSION_THRESHOLD = 4;
 const MAX_TURNS = 160;
+const EFFECT_CLEAR_DELAY_MS = 500;
+const BLUE_AI_DELAY_MS = 650;
+const RESULT_POPUP_DELAY_MS = 1100;
+
+type BluePlayerMode = "human" | "fuzzy";
+const BLUE_PLAYER_MODE: BluePlayerMode = "fuzzy";
 
 type ViewMode = "start" | "game" | "result";
-
-function createEmptyBoard(size: number): BoardData {
-  return Array.from({ length: size }, () =>
-    Array.from({ length: size }, () => ({ player: 0 as Player, power: 0 })),
-  );
-}
-
-function cloneBoard(board: BoardData): BoardData {
-  return board.map((row) => row.map((cell) => ({ ...cell })));
-}
-
-function neighbors(row: number, col: number, size: number): Move[] {
-  const positions: Move[] = [];
-  const shifts: Move[] = [
-    { row: 1, col: 0 },
-    { row: -1, col: 0 },
-    { row: 0, col: 1 },
-    { row: 0, col: -1 },
-  ];
-
-  for (const shift of shifts) {
-    const nextRow = row + shift.row;
-    const nextCol = col + shift.col;
-    if (nextRow >= 0 && nextCol >= 0 && nextRow < size && nextCol < size) {
-      positions.push({ row: nextRow, col: nextCol });
-    }
-  }
-  return positions;
-}
-
-function keyOf(row: number, col: number): string {
-  return `${row}-${col}`;
-}
-
-function getValidMoves(board: BoardData, player: Player): Move[] {
-  const moves: Move[] = [];
-  for (let r = 0; r < board.length; r += 1) {
-    for (let c = 0; c < board.length; c += 1) {
-      const owner = board[r][c].player;
-      if (owner === 0 || owner === player) {
-        moves.push({ row: r, col: c });
-      }
-    }
-  }
-  return moves;
-}
 
 function evaluate(board: BoardData): number {
   let redPower = 0;
@@ -77,58 +44,6 @@ function evaluate(board: BoardData): number {
   }
 
   return redPower - bluePower + (redCells - blueCells) * 0.8;
-}
-
-function applyMoveWithEffects(board: BoardData, move: Move, player: Player) {
-  const nextBoard = cloneBoard(board);
-  const explodingCells: string[] = [];
-  const energizedCells: string[] = [];
-  const queue: Move[] = [];
-  const seenEnergy = new Set<string>();
-
-  nextBoard[move.row][move.col].player = player;
-  nextBoard[move.row][move.col].power += 1;
-
-  for (let r = 0; r < nextBoard.length; r += 1) {
-    for (let c = 0; c < nextBoard.length; c += 1) {
-      if (nextBoard[r][c].player !== 0 && nextBoard[r][c].power >= EXPLOSION_THRESHOLD) {
-        queue.push({ row: r, col: c });
-      }
-    }
-  }
-
-  while (queue.length > 0) {
-    const current = queue.shift();
-    if (!current) {
-      break;
-    }
-
-    const cell = nextBoard[current.row][current.col];
-    if (cell.player === 0 || cell.power < EXPLOSION_THRESHOLD) {
-      continue;
-    }
-
-    const owner = cell.player;
-    explodingCells.push(keyOf(current.row, current.col));
-    cell.player = 0;
-    cell.power = 0;
-
-    for (const neighbor of neighbors(current.row, current.col, nextBoard.length)) {
-      const nCell = nextBoard[neighbor.row][neighbor.col];
-      nCell.player = owner;
-      nCell.power += 1;
-      const nKey = keyOf(neighbor.row, neighbor.col);
-      if (!seenEnergy.has(nKey)) {
-        seenEnergy.add(nKey);
-        energizedCells.push(nKey);
-      }
-      if (nCell.power >= EXPLOSION_THRESHOLD) {
-        queue.push(neighbor);
-      }
-    }
-  }
-
-  return { board: nextBoard, explodingCells, energizedCells };
 }
 
 function minimax(board: BoardData, depth: number, isMax: boolean): number {
@@ -184,38 +99,6 @@ function chooseMove(board: BoardData, player: Player, depth: number): Move | nul
   return bestMove;
 }
 
-function computeScores(board: BoardData): Scores {
-  let redPower = 0;
-  let bluePower = 0;
-  let redCells = 0;
-  let blueCells = 0;
-
-  for (const row of board) {
-    for (const cell of row) {
-      if (cell.player === 1) {
-        redPower += cell.power;
-        redCells += 1;
-      }
-      if (cell.player === 2) {
-        bluePower += cell.power;
-        blueCells += 1;
-      }
-    }
-  }
-
-  return { redPower, bluePower, redCells, blueCells };
-}
-
-function getWinner(scores: Scores): Player {
-  if (scores.redPower === scores.bluePower) {
-    if (scores.redCells === scores.blueCells) {
-      return 0;
-    }
-    return scores.redCells > scores.blueCells ? 1 : 2;
-  }
-  return scores.redPower > scores.bluePower ? 1 : 2;
-}
-
 export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("start");
   const [board, setBoard] = useState<BoardData>(() => createEmptyBoard(SIZE));
@@ -228,19 +111,36 @@ export default function App() {
   const [lastMove, setLastMove] = useState<Move | null>(null);
   const [turnCount, setTurnCount] = useState(0);
   const [winner, setWinner] = useState<Player>(0);
+  const [isEndingGame, setIsEndingGame] = useState(false);
   const [energizedCells, setEnergizedCells] = useState<string[]>([]);
   const [explodingCells, setExplodingCells] = useState<string[]>([]);
+  const clearEffectsTimeoutRef = useRef<number | null>(null);
+  const resultPopupTimeoutRef = useRef<number | null>(null);
 
   const scores = useMemo(() => computeScores(board), [board]);
 
   const clearEffectsSoon = () => {
-    window.setTimeout(() => {
+    if (clearEffectsTimeoutRef.current !== null) {
+      window.clearTimeout(clearEffectsTimeoutRef.current);
+    }
+
+    clearEffectsTimeoutRef.current = window.setTimeout(() => {
       setEnergizedCells([]);
       setExplodingCells([]);
-    }, 500);
+      clearEffectsTimeoutRef.current = null;
+    }, EFFECT_CLEAR_DELAY_MS);
+  };
+
+  const clearPendingEndGame = () => {
+    if (resultPopupTimeoutRef.current !== null) {
+      window.clearTimeout(resultPopupTimeoutRef.current);
+      resultPopupTimeoutRef.current = null;
+    }
+    setIsEndingGame(false);
   };
 
   const resetGame = () => {
+    clearPendingEndGame();
     setBoard(createEmptyBoard(SIZE));
     setTurn(1);
     setStatus("Ready");
@@ -251,6 +151,10 @@ export default function App() {
     setWinner(0);
     setEnergizedCells([]);
     setExplodingCells([]);
+    if (clearEffectsTimeoutRef.current !== null) {
+      window.clearTimeout(clearEffectsTimeoutRef.current);
+      clearEffectsTimeoutRef.current = null;
+    }
     setViewMode("game");
   };
 
@@ -264,19 +168,62 @@ export default function App() {
     const canEndByElimination = nextTurnCount >= 2;
 
     if ((canEndByElimination && oneSideEliminated) || nextTurnCount >= MAX_TURNS) {
-      setWinner(getWinner(nextScores));
-      setStatus("Simulation finished");
       setIsRunning(false);
-      setViewMode("result");
+      setIsEndingGame(true);
+
+      const resolvedWinner = getWinner(nextScores);
+      const statusMessage =
+        resolvedWinner === 1 ? "Red wins..." : resolvedWinner === 2 ? "Blue wins..." : "Draw...";
+
+      setWinner(resolvedWinner);
+      setStatus(statusMessage);
+
+      if (resultPopupTimeoutRef.current !== null) {
+        window.clearTimeout(resultPopupTimeoutRef.current);
+      }
+
+      resultPopupTimeoutRef.current = window.setTimeout(() => {
+        setStatus("Simulation finished");
+        setIsEndingGame(false);
+        setViewMode("result");
+        resultPopupTimeoutRef.current = null;
+      }, RESULT_POPUP_DELAY_MS);
+
       return true;
     }
     return false;
   };
 
+  const applyCommittedMove = (move: Move, player: Player, nextStatus: string) => {
+    const result = applyMoveWithEffects(board, move, player);
+    const nextTurn = player === 1 ? 2 : 1;
+    const nextTurnCount = turnCount + 1;
+
+    setBoard(result.board);
+    setLastMove(move);
+    setMoveHistory((previous) => [...previous, move]);
+    setEnergizedCells(result.energizedCells);
+    setExplodingCells(result.explodingCells);
+    setTurn(nextTurn);
+    setTurnCount(nextTurnCount);
+    setStatus(result.explodingCells.length > 0 ? "Chain reaction triggered" : nextStatus);
+    clearEffectsSoon();
+
+    finishGameIfNeeded(result.board, nextTurnCount);
+  };
+
+  const chooseAutomatedMove = (currentBoard: BoardData, player: Player) => {
+    if (player === 2 && BLUE_PLAYER_MODE === "fuzzy") {
+      return chooseFuzzyMove(currentBoard, player);
+    }
+
+    return chooseMove(currentBoard, player, depth);
+  };
+
   const runTurn = () => {
     setStatus("Thinking...");
 
-    const bestMove = chooseMove(board, turn, depth);
+    const bestMove = chooseAutomatedMove(board, turn);
     if (!bestMove) {
       setWinner(getWinner(scores));
       setStatus("No valid moves");
@@ -285,25 +232,11 @@ export default function App() {
       return;
     }
 
-    const result = applyMoveWithEffects(board, bestMove, turn);
-    const nextTurn = turn === 1 ? 2 : 1;
-    const nextTurnCount = turnCount + 1;
-
-    setBoard(result.board);
-    setLastMove(bestMove);
-    setMoveHistory((previous) => [...previous, bestMove]);
-    setEnergizedCells(result.energizedCells);
-    setExplodingCells(result.explodingCells);
-    setTurn(nextTurn);
-    setTurnCount(nextTurnCount);
-    setStatus(result.explodingCells.length > 0 ? "Chain reaction triggered" : "Running");
-    clearEffectsSoon();
-
-    finishGameIfNeeded(result.board, nextTurnCount);
+    applyCommittedMove(bestMove, turn, "Running");
   };
 
   useEffect(() => {
-    if (!isRunning || viewMode !== "game") {
+    if (!isRunning || viewMode !== "game" || isEndingGame) {
       return;
     }
 
@@ -312,7 +245,42 @@ export default function App() {
     }, speedMs);
 
     return () => window.clearTimeout(timer);
-  }, [isRunning, board, turn, speedMs, depth, viewMode]);
+  }, [isRunning, board, turn, speedMs, depth, viewMode, isEndingGame]);
+
+  useEffect(() => {
+    return () => {
+      if (clearEffectsTimeoutRef.current !== null) {
+        window.clearTimeout(clearEffectsTimeoutRef.current);
+      }
+
+      if (resultPopupTimeoutRef.current !== null) {
+        window.clearTimeout(resultPopupTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (viewMode !== "game" || isRunning || isEndingGame || BLUE_PLAYER_MODE !== "fuzzy" || turn !== 2) {
+      return;
+    }
+
+    setStatus("Blue fuzzy AI is thinking...");
+
+    const timer = window.setTimeout(() => {
+      const bestMove = chooseFuzzyMove(board, 2);
+
+      if (!bestMove) {
+        setWinner(getWinner(scores));
+        setStatus("Blue AI found no valid moves");
+        setViewMode("result");
+        return;
+      }
+
+      applyCommittedMove(bestMove, 2, "Blue fuzzy AI moved");
+    }, BLUE_AI_DELAY_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [board, isRunning, scores, turn, viewMode, isEndingGame]);
 
   const handleStart = () => {
     resetGame();
@@ -335,15 +303,16 @@ export default function App() {
 
   if (viewMode === "result") {
     return (
-      <ResultScreen
-        winner={winner}
-        scores={scores}
-        onPlayAgain={resetGame}
-        onBackHome={() => {
-          setViewMode("start");
-          setIsRunning(false);
-        }}
-      />
+        <ResultScreen
+          winner={winner}
+          scores={scores}
+          onPlayAgain={resetGame}
+          onBackHome={() => {
+            clearPendingEndGame();
+            setViewMode("start");
+            setIsRunning(false);
+          }}
+        />
     );
   }
 
@@ -362,7 +331,10 @@ export default function App() {
         energizedCells={energizedCells}
         explodingCells={explodingCells}
         onCellClick={(row, col) => {
-          if (isRunning) {
+          if (isRunning || isEndingGame || (BLUE_PLAYER_MODE === "fuzzy" && turn === 2)) {
+            if (BLUE_PLAYER_MODE === "fuzzy" && turn === 2) {
+              setStatus("Blue fuzzy AI is thinking...");
+            }
             return;
           }
           const currentMove: Move = { row, col };
@@ -371,20 +343,12 @@ export default function App() {
             setStatus("Invalid move: opponent-owned cell");
             return;
           }
-          const result = applyMoveWithEffects(board, currentMove, turn);
-          const nextTurnCount = turnCount + 1;
-          setBoard(result.board);
-          setLastMove(currentMove);
-          setMoveHistory((previous) => [...previous, currentMove]);
-          setEnergizedCells(result.energizedCells);
-          setExplodingCells(result.explodingCells);
-          setTurn(turn === 1 ? 2 : 1);
-          setTurnCount(nextTurnCount);
-          setStatus("Manual move applied");
-          clearEffectsSoon();
-          finishGameIfNeeded(result.board, nextTurnCount);
+          applyCommittedMove(currentMove, turn, "Manual move applied");
         }}
         onStartAuto={() => {
+          if (isEndingGame) {
+            return;
+          }
           setStatus("Running");
           setIsRunning(true);
         }}
@@ -393,6 +357,9 @@ export default function App() {
           setStatus("Paused");
         }}
         onNextStep={() => {
+          if (isEndingGame) {
+            return;
+          }
           setIsRunning(false);
           runTurn();
         }}
