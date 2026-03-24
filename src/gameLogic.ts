@@ -1,11 +1,17 @@
-import { BoardData, Move, Player, Scores } from "./types";
+import { ActivePlayer, BoardData, Move, OpeningState, Player, Scores } from "./types";
 
 export const EXPLOSION_THRESHOLD = 4;
+export const OPENING_POWER = 3;
 
 export interface MoveEffectsResult {
   board: BoardData;
+  openingState: OpeningState;
   explodingCells: string[];
   energizedCells: string[];
+}
+
+export function createOpeningState(): OpeningState {
+  return { 1: false, 2: false };
 }
 
 export function createEmptyBoard(size: number): BoardData {
@@ -16,6 +22,14 @@ export function createEmptyBoard(size: number): BoardData {
 
 export function cloneBoard(board: BoardData): BoardData {
   return board.map((row) => row.map((cell) => ({ ...cell })));
+}
+
+export function cloneOpeningState(openingState: OpeningState): OpeningState {
+  return { 1: openingState[1], 2: openingState[2] };
+}
+
+function isActivePlayer(player: Player): player is ActivePlayer {
+  return player === 1 || player === 2;
 }
 
 export function neighbors(row: number, col: number, size: number): Move[] {
@@ -42,13 +56,20 @@ export function keyOf(row: number, col: number): string {
   return `${row}-${col}`;
 }
 
-export function getValidMoves(board: BoardData, player: Player): Move[] {
+export function getValidMoves(board: BoardData, player: Player, openingState: OpeningState): Move[] {
+  if (!isActivePlayer(player)) {
+    return [];
+  }
+
   const moves: Move[] = [];
+  const isOpeningMove = !openingState[player];
 
   for (let r = 0; r < board.length; r += 1) {
     for (let c = 0; c < board.length; c += 1) {
       const owner = board[r][c].player;
-      if (owner === 0 || owner === player) {
+      if (isOpeningMove && owner === 0) {
+        moves.push({ row: r, col: c });
+      } else if (!isOpeningMove && owner === player) {
         moves.push({ row: r, col: c });
       }
     }
@@ -57,15 +78,28 @@ export function getValidMoves(board: BoardData, player: Player): Move[] {
   return moves;
 }
 
-export function applyMoveWithEffects(board: BoardData, move: Move, player: Player): MoveEffectsResult {
+export function applyMoveWithEffects(
+  board: BoardData,
+  move: Move,
+  player: Player,
+  openingState: OpeningState,
+): MoveEffectsResult {
   const nextBoard = cloneBoard(board);
+  const nextOpeningState = cloneOpeningState(openingState);
   const explodingCells: string[] = [];
   const energizedCells: string[] = [];
   const queue: Move[] = [];
   const seenEnergy = new Set<string>();
 
+  const isOpeningMove = isActivePlayer(player) && !nextOpeningState[player];
   nextBoard[move.row][move.col].player = player;
-  nextBoard[move.row][move.col].power += 1;
+  nextBoard[move.row][move.col].power = isOpeningMove
+    ? OPENING_POWER
+    : nextBoard[move.row][move.col].power + 1;
+
+  if (isOpeningMove) {
+    nextOpeningState[player] = true;
+  }
 
   for (let r = 0; r < nextBoard.length; r += 1) {
     for (let c = 0; c < nextBoard.length; c += 1) {
@@ -108,7 +142,7 @@ export function applyMoveWithEffects(board: BoardData, move: Move, player: Playe
     }
   }
 
-  return { board: nextBoard, explodingCells, energizedCells };
+  return { board: nextBoard, openingState: nextOpeningState, explodingCells, energizedCells };
 }
 
 export function computeScores(board: BoardData): Scores {

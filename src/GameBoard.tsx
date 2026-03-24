@@ -52,6 +52,8 @@ export default function GameBoard({
   onDepthChange,
   onSpeedChange,
 }: GameBoardProps) {
+  const boardGridClassName = `board-grid board-grid--${board.length}`;
+
   return (
     <section className="arena-screen">
       <header className="arena-header glass-panel">
