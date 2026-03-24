@@ -77,10 +77,7 @@ export default function GameBoard({
 
       <main className="arena-main">
         <div className="board-shell glass-panel">
-          <div
-            className="board-grid"
-            style={{ gridTemplateColumns: `repeat(${board.length}, minmax(58px, 84px))` }}
-          >
+          <div className="board-grid" data-size={board.length}>
             {board.map((row, r) =>
               row.map((cell, c) => {
                 const key = `${r}-${c}`;
@@ -93,7 +90,7 @@ export default function GameBoard({
                     col={c}
                     isEnergized={energizedCells.includes(key)}
                     isExploding={explodingCells.includes(key)}
-                    waveDelayMs={waveIndex >= 0 ? waveIndex * 45 : 0}
+                    waveDelayStep={Math.max(waveIndex, 0)}
                     onClick={onCellClick}
                   />
                 );

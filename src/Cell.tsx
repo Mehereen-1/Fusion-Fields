@@ -6,7 +6,7 @@ interface CellProps {
   col: number;
   isEnergized: boolean;
   isExploding: boolean;
-  waveDelayMs: number;
+  waveDelayStep: number;
   onClick: (row: number, col: number) => void;
 }
 
@@ -16,15 +16,15 @@ export default function Cell({
   col,
   isEnergized,
   isExploding,
-  waveDelayMs,
+  waveDelayStep,
   onClick,
 }: CellProps) {
   const ownerClass = cell.player === 1 ? "cell-red" : cell.player === 2 ? "cell-blue" : "cell-empty";
+  const waveDelayClass = `wave-delay-${Math.max(0, Math.min(24, waveDelayStep))}`;
 
   return (
     <button
-      className={`board-cell ${ownerClass} ${isEnergized ? "energized" : ""} ${isExploding ? "exploding" : ""}`}
-      style={{ animationDelay: `${waveDelayMs}ms` }}
+      className={`board-cell ${ownerClass} ${isEnergized ? "energized" : ""} ${isExploding ? "exploding" : ""} ${waveDelayClass}`}
       onClick={() => onClick(row, col)}
       type="button"
       aria-label={`Row ${row + 1} Column ${col + 1}`}
