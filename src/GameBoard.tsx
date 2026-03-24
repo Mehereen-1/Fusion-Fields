@@ -52,6 +52,8 @@ export default function GameBoard({
   onDepthChange,
   onSpeedChange,
 }: GameBoardProps) {
+  const boardGridClassName = `board-grid board-grid--${board.length}`;
+
   return (
     <section className="arena-screen">
       <header className="arena-header glass-panel">
@@ -77,10 +79,7 @@ export default function GameBoard({
 
       <main className="arena-main">
         <div className="board-shell glass-panel">
-          <div
-            className="board-grid"
-            style={{ gridTemplateColumns: `repeat(${board.length}, minmax(58px, 84px))` }}
-          >
+          <div className={boardGridClassName}>
             {board.map((row, r) =>
               row.map((cell, c) => {
                 const key = `${r}-${c}`;

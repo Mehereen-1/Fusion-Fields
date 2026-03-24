@@ -7,12 +7,13 @@ import {
   applyMoveWithEffects,
   computeScores,
   createEmptyBoard,
+  createOpeningState,
   getValidMoves,
   getWinner,
 } from "./gameLogic";
 import ResultScreen from "./ResultScreen";
 import StartScreen from "./StartScreen";
-import { BoardData, Move, Player } from "./types";
+import { BoardData, Move, OpeningState, Player } from "./types";
 
 const SIZE = 5;
 const MAX_TURNS = 160;
@@ -46,13 +47,13 @@ function evaluate(board: BoardData): number {
   return redPower - bluePower + (redCells - blueCells) * 0.8;
 }
 
-function minimax(board: BoardData, depth: number, isMax: boolean): number {
+function minimax(board: BoardData, openingState: OpeningState, depth: number, isMax: boolean): number {
   if (depth === 0) {
     return evaluate(board);
   }
 
   const player: Player = isMax ? 1 : 2;
-  const moves = getValidMoves(board, player);
+  const moves = getValidMoves(board, player, openingState);
   if (moves.length === 0) {
     return evaluate(board);
   }
@@ -60,22 +61,22 @@ function minimax(board: BoardData, depth: number, isMax: boolean): number {
   if (isMax) {
     let best = Number.NEGATIVE_INFINITY;
     for (const move of moves) {
-      const simulated = applyMoveWithEffects(board, move, player).board;
-      best = Math.max(best, minimax(simulated, depth - 1, false));
+      const simulated = applyMoveWithEffects(board, move, player, openingState);
+      best = Math.max(best, minimax(simulated.board, simulated.openingState, depth - 1, false));
     }
     return best;
   }
 
   let best = Number.POSITIVE_INFINITY;
   for (const move of moves) {
-    const simulated = applyMoveWithEffects(board, move, player).board;
-    best = Math.min(best, minimax(simulated, depth - 1, true));
+    const simulated = applyMoveWithEffects(board, move, player, openingState);
+    best = Math.min(best, minimax(simulated.board, simulated.openingState, depth - 1, true));
   }
   return best;
 }
 
-function chooseMove(board: BoardData, player: Player, depth: number): Move | null {
-  const moves = getValidMoves(board, player);
+function chooseMove(board: BoardData, openingState: OpeningState, player: Player, depth: number): Move | null {
+  const moves = getValidMoves(board, player, openingState);
   if (moves.length === 0) {
     return null;
   }
@@ -84,8 +85,8 @@ function chooseMove(board: BoardData, player: Player, depth: number): Move | nul
   let bestValue = player === 1 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
 
   for (const move of moves) {
-    const simulated = applyMoveWithEffects(board, move, player).board;
-    const score = minimax(simulated, Math.max(0, depth - 1), player !== 1);
+    const simulated = applyMoveWithEffects(board, move, player, openingState);
+    const score = minimax(simulated.board, simulated.openingState, Math.max(0, depth - 1), player !== 1);
     if (player === 1 && score > bestValue) {
       bestValue = score;
       bestMove = move;
@@ -102,6 +103,7 @@ function chooseMove(board: BoardData, player: Player, depth: number): Move | nul
 export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("start");
   const [board, setBoard] = useState<BoardData>(() => createEmptyBoard(SIZE));
+  const [openingState, setOpeningState] = useState<OpeningState>(() => createOpeningState());
   const [turn, setTurn] = useState<Player>(1);
   const [status, setStatus] = useState("Ready");
   const [isRunning, setIsRunning] = useState(false);
@@ -142,6 +144,7 @@ export default function App() {
   const resetGame = () => {
     clearPendingEndGame();
     setBoard(createEmptyBoard(SIZE));
+    setOpeningState(createOpeningState());
     setTurn(1);
     setStatus("Ready");
     setIsRunning(false);
@@ -158,14 +161,17 @@ export default function App() {
     setViewMode("game");
   };
 
-  const finishGameIfNeeded = (nextBoard: BoardData, nextTurnCount: number): boolean => {
+  const finishGameIfNeeded = (
+    nextBoard: BoardData,
+    nextOpeningState: OpeningState,
+    nextTurnCount: number,
+  ): boolean => {
     const nextScores = computeScores(nextBoard);
     const oneSideEliminated =
       (nextScores.redCells === 0 && nextScores.blueCells > 0) ||
       (nextScores.blueCells === 0 && nextScores.redCells > 0);
 
-    // Avoid ending immediately on the opening move before both players act.
-    const canEndByElimination = nextTurnCount >= 2;
+    const canEndByElimination = nextOpeningState[1] && nextOpeningState[2];
 
     if ((canEndByElimination && oneSideEliminated) || nextTurnCount >= MAX_TURNS) {
       setIsRunning(false);
@@ -195,11 +201,12 @@ export default function App() {
   };
 
   const applyCommittedMove = (move: Move, player: Player, nextStatus: string) => {
-    const result = applyMoveWithEffects(board, move, player);
+    const result = applyMoveWithEffects(board, move, player, openingState);
     const nextTurn = player === 1 ? 2 : 1;
     const nextTurnCount = turnCount + 1;
 
     setBoard(result.board);
+    setOpeningState(result.openingState);
     setLastMove(move);
     setMoveHistory((previous) => [...previous, move]);
     setEnergizedCells(result.energizedCells);
@@ -209,21 +216,21 @@ export default function App() {
     setStatus(result.explodingCells.length > 0 ? "Chain reaction triggered" : nextStatus);
     clearEffectsSoon();
 
-    finishGameIfNeeded(result.board, nextTurnCount);
+    finishGameIfNeeded(result.board, result.openingState, nextTurnCount);
   };
 
-  const chooseAutomatedMove = (currentBoard: BoardData, player: Player) => {
+  const chooseAutomatedMove = (currentBoard: BoardData, currentOpeningState: OpeningState, player: Player) => {
     if (player === 2 && BLUE_PLAYER_MODE === "fuzzy") {
-      return chooseFuzzyMove(currentBoard, player);
+      return chooseFuzzyMove(currentBoard, player, currentOpeningState);
     }
 
-    return chooseMove(currentBoard, player, depth);
+    return chooseMove(currentBoard, currentOpeningState, player, depth);
   };
 
   const runTurn = () => {
     setStatus("Thinking...");
 
-    const bestMove = chooseAutomatedMove(board, turn);
+    const bestMove = chooseAutomatedMove(board, openingState, turn);
     if (!bestMove) {
       setWinner(getWinner(scores));
       setStatus("No valid moves");
@@ -245,7 +252,7 @@ export default function App() {
     }, speedMs);
 
     return () => window.clearTimeout(timer);
-  }, [isRunning, board, turn, speedMs, depth, viewMode, isEndingGame]);
+  }, [isRunning, board, openingState, turn, speedMs, depth, viewMode, isEndingGame]);
 
   useEffect(() => {
     return () => {
@@ -267,7 +274,7 @@ export default function App() {
     setStatus("Blue fuzzy AI is thinking...");
 
     const timer = window.setTimeout(() => {
-      const bestMove = chooseFuzzyMove(board, 2);
+      const bestMove = chooseFuzzyMove(board, 2, openingState);
 
       if (!bestMove) {
         setWinner(getWinner(scores));
@@ -280,7 +287,7 @@ export default function App() {
     }, BLUE_AI_DELAY_MS);
 
     return () => window.clearTimeout(timer);
-  }, [board, isRunning, scores, turn, viewMode, isEndingGame]);
+  }, [board, openingState, isRunning, scores, turn, viewMode, isEndingGame]);
 
   const handleStart = () => {
     resetGame();
@@ -337,10 +344,18 @@ export default function App() {
             }
             return;
           }
+
+          const currentPlayerHasOpened = turn === 1 || turn === 2 ? openingState[turn] : false;
           const currentMove: Move = { row, col };
-          const valid = getValidMoves(board, turn).some((move) => move.row === row && move.col === col);
+          const valid = getValidMoves(board, turn, openingState).some(
+            (move) => move.row === row && move.col === col,
+          );
           if (!valid) {
-            setStatus("Invalid move: opponent-owned cell");
+            setStatus(
+              currentPlayerHasOpened
+                ? "Invalid move: play on one of your colored cells"
+                : "Invalid move: opening move must be on an empty cell",
+            );
             return;
           }
           applyCommittedMove(currentMove, turn, "Manual move applied");

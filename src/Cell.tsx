@@ -20,6 +20,7 @@ export default function Cell({
   onClick,
 }: CellProps) {
   const ownerClass = cell.player === 1 ? "cell-red" : cell.player === 2 ? "cell-blue" : "cell-empty";
+  const orbCount = Math.min(cell.power, 3);
 
   return (
     <button
@@ -27,9 +28,17 @@ export default function Cell({
       style={{ animationDelay: `${waveDelayMs}ms` }}
       onClick={() => onClick(row, col)}
       type="button"
-      aria-label={`Row ${row + 1} Column ${col + 1}`}
+      aria-label={`Row ${row + 1} Column ${col + 1} Power ${cell.power}`}
     >
-      {cell.power > 0 ? <span className="cell-power">{cell.power}</span> : <span className="cell-dot" />}
+      {orbCount > 0 ? (
+        <div className={`cell-orbs cell-orbs--${orbCount}`} key={`${cell.player}-${cell.power}`}>
+          {Array.from({ length: orbCount }, (_, index) => (
+            <span className="cell-orb" key={index} />
+          ))}
+        </div>
+      ) : (
+        <span className="cell-empty-dot" />
+      )}
     </button>
   );
 }

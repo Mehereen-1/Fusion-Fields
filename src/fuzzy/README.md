@@ -19,6 +19,9 @@ Each Blue move is evaluated with these inputs:
 - `localThreat`: nearby Red pressure around the target cell
 - `localSupport`: nearby Blue support after the move
 - `centerBias`: whether the move helps control the center
+- `setupPotential`: how many Blue cells are left charged and ready to threaten explosions
+- `counterRisk`: how strong Red's best reply looks after Blue commits
+- `finisher`: whether the move can immediately eliminate Red
 
 ## How to tune it
 
