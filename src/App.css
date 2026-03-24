@@ -274,27 +274,35 @@ body {
   gap: 10px;
 }
 
-.board-grid--3 {
+.board-grid[data-size="1"] {
+  grid-template-columns: repeat(1, minmax(58px, 84px));
+}
+
+.board-grid[data-size="2"] {
+  grid-template-columns: repeat(2, minmax(58px, 84px));
+}
+
+.board-grid[data-size="3"] {
   grid-template-columns: repeat(3, minmax(58px, 84px));
 }
 
-.board-grid--4 {
+.board-grid[data-size="4"] {
   grid-template-columns: repeat(4, minmax(58px, 84px));
 }
 
-.board-grid--5 {
+.board-grid[data-size="5"] {
   grid-template-columns: repeat(5, minmax(58px, 84px));
 }
 
-.board-grid--6 {
+.board-grid[data-size="6"] {
   grid-template-columns: repeat(6, minmax(58px, 84px));
 }
 
-.board-grid--7 {
+.board-grid[data-size="7"] {
   grid-template-columns: repeat(7, minmax(58px, 84px));
 }
 
-.board-grid--8 {
+.board-grid[data-size="8"] {
   grid-template-columns: repeat(8, minmax(58px, 84px));
 }
 
