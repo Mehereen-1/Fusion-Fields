@@ -9,10 +9,10 @@ interface ResultScreenProps {
 
 function winnerLabel(winner: Player): string {
   if (winner === 1) {
-    return "Red Wins";
+    return "Red Player Wins";
   }
   if (winner === 2) {
-    return "Blue Wins";
+    return "Blue Fuzzy AI Wins";
   }
   return "Draw";
 }
@@ -22,7 +22,7 @@ export default function ResultScreen({ winner, scores, onPlayAgain, onBackHome }
     <section className="result-screen">
       <div className="result-screen__bg" />
       <div className="result-panel glass-panel">
-        <p className="eyebrow">Simulation Complete</p>
+        <p className="eyebrow">Match Complete</p>
         <h2 className={winner === 1 ? "winner-red" : winner === 2 ? "winner-blue" : "winner-draw"}>
           {winnerLabel(winner)}
         </h2>

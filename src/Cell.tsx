@@ -20,6 +20,7 @@ export default function Cell({
   onClick,
 }: CellProps) {
   const ownerClass = cell.player === 1 ? "cell-red" : cell.player === 2 ? "cell-blue" : "cell-empty";
+  const orbCount = Math.max(0, Math.min(cell.power, 3));
   const waveDelayClass = `wave-delay-${Math.max(0, Math.min(24, waveDelayStep))}`;
 
   return (

@@ -12,11 +12,11 @@ export default function StartScreen({ onStart, onSettings, onAbout }: StartScree
       <div className="start-screen__content">
         <p className="eyebrow">Desktop Tactical Simulation</p>
         <h1>Color War Arena</h1>
-        <p className="subtitle">AI vs AI Strategy Simulation</p>
+        <p className="subtitle">Red Player vs Blue Fuzzy AI</p>
 
         <div className="start-actions">
           <button className="btn btn-primary" onClick={onStart} type="button">
-            Start Game
+            Play as Red
           </button>
           <button className="btn btn-ghost" onClick={onSettings} type="button">
             Settings
