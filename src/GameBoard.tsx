@@ -92,7 +92,7 @@ export default function GameBoard({
                     col={c}
                     isEnergized={energizedCells.includes(key)}
                     isExploding={explodingCells.includes(key)}
-                    waveDelayMs={waveIndex >= 0 ? waveIndex * 45 : 0}
+                    waveStep={waveIndex >= 0 ? waveIndex : 0}
                     onClick={onCellClick}
                   />
                 );

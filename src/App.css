@@ -420,6 +420,106 @@ body {
   animation: explodeFlash 0.5s cubic-bezier(0.2, 0.95, 0.22, 0.95) forwards;
 }
 
+.board-cell.wave-delay-0 {
+  animation-delay: 0ms;
+}
+
+.board-cell.wave-delay-1 {
+  animation-delay: 45ms;
+}
+
+.board-cell.wave-delay-2 {
+  animation-delay: 90ms;
+}
+
+.board-cell.wave-delay-3 {
+  animation-delay: 135ms;
+}
+
+.board-cell.wave-delay-4 {
+  animation-delay: 180ms;
+}
+
+.board-cell.wave-delay-5 {
+  animation-delay: 225ms;
+}
+
+.board-cell.wave-delay-6 {
+  animation-delay: 270ms;
+}
+
+.board-cell.wave-delay-7 {
+  animation-delay: 315ms;
+}
+
+.board-cell.wave-delay-8 {
+  animation-delay: 360ms;
+}
+
+.board-cell.wave-delay-9 {
+  animation-delay: 405ms;
+}
+
+.board-cell.wave-delay-10 {
+  animation-delay: 450ms;
+}
+
+.board-cell.wave-delay-11 {
+  animation-delay: 495ms;
+}
+
+.board-cell.wave-delay-12 {
+  animation-delay: 540ms;
+}
+
+.board-cell.wave-delay-13 {
+  animation-delay: 585ms;
+}
+
+.board-cell.wave-delay-14 {
+  animation-delay: 630ms;
+}
+
+.board-cell.wave-delay-15 {
+  animation-delay: 675ms;
+}
+
+.board-cell.wave-delay-16 {
+  animation-delay: 720ms;
+}
+
+.board-cell.wave-delay-17 {
+  animation-delay: 765ms;
+}
+
+.board-cell.wave-delay-18 {
+  animation-delay: 810ms;
+}
+
+.board-cell.wave-delay-19 {
+  animation-delay: 855ms;
+}
+
+.board-cell.wave-delay-20 {
+  animation-delay: 900ms;
+}
+
+.board-cell.wave-delay-21 {
+  animation-delay: 945ms;
+}
+
+.board-cell.wave-delay-22 {
+  animation-delay: 990ms;
+}
+
+.board-cell.wave-delay-23 {
+  animation-delay: 1035ms;
+}
+
+.board-cell.wave-delay-24 {
+  animation-delay: 1080ms;
+}
+
 .arena-side {
   display: grid;
   gap: 12px;
