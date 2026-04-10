@@ -54,6 +54,12 @@ def ai_move(payload: AIMoveRequest = Body(...)) -> Dict[str, Optional[int]]:
     return {"row": best[0], "col": best[1]}
 
 
+@app.post("/ai-move")
+def ai_move_post(payload: AIMoveRequest = Body(...)) -> Dict[str, Optional[int]]:
+    """POST-compatible wrapper for /ai-move that delegates to the existing GET handler."""
+    return ai_move(payload)
+
+
 @app.post("/apply-move")
 def apply_move_endpoint(payload: ApplyMoveRequest) -> Dict[str, Board]:
     """Apply one move and return the board after all chain reactions."""

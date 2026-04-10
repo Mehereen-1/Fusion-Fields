@@ -1,0 +1,1 @@
+export { chooseMinimaxMove } from "./chooseMinimaxMove";

@@ -1,31 +1,61 @@
+import { useState, useEffect } from "react";
+import "./StartScreen.css";
+
 interface StartScreenProps {
   onStart: () => void;
-  onSettings: () => void;
   onAbout: () => void;
+  onExit?: () => void;
 }
 
-export default function StartScreen({ onStart, onSettings, onAbout }: StartScreenProps) {
-  return (
-    <section className="start-screen">
-      <div className="start-screen__bg" />
-      <div className="start-screen__particles" />
-      <div className="start-screen__content">
-        <p className="eyebrow">Desktop Tactical Simulation</p>
-        <h1>Color War Arena</h1>
-        <p className="subtitle">Red Player vs Blue Fuzzy AI</p>
+export default function StartScreen({ onStart, onAbout, onExit }: StartScreenProps) {
+  const [showMenu, setShowMenu] = useState(false);
 
-        <div className="start-actions">
-          <button className="btn btn-primary" onClick={onStart} type="button">
-            Play as Red
-          </button>
-          <button className="btn btn-ghost" onClick={onSettings} type="button">
-            Settings
-          </button>
-          <button className="btn btn-ghost" onClick={onAbout} type="button">
-            About
-          </button>
+  useEffect(() => {
+    // Simulate intro animation delay
+    const timer = setTimeout(() => {
+      setShowMenu(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleStart = () => {
+    onStart();
+  };
+
+  const handleAbout = () => {
+    onAbout();
+  };
+
+  const handleExit = () => {
+    if (onExit) {
+      onExit();
+      return;
+    }
+
+    // For Tauri
+    window.close();
+  };
+
+  return (
+    <div className="start-container">
+      {/* Background */}
+      <div className="background" />
+
+      {/* Overlay Glow */}
+      <div className="overlay" />
+
+      {/* Title */}
+      <h1 className="game-title">Mystic Forest</h1>
+
+      {/* Menu */}
+      {showMenu && (
+        <div className="menu">
+          <button onClick={handleStart}>Start</button>
+          <button onClick={handleAbout}>About</button>
+          <button onClick={handleExit}>Exit</button>
         </div>
-      </div>
-    </section>
+      )}
+    </div>
   );
 }
