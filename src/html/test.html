@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jungle Tactics - Game Board</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap');
+
+        :root {
+            --jungle-dark: #2d1b0d;
+            --jungle-wood: #5d3a1a;
+            --jungle-light: #8b5a2b;
+            --jungle-green: #4ade80;
+            --jungle-yellow: #facc15;
+        }
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: radial-gradient(circle, #1a2e05 0%, #0a1401 100%);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .wood-panel {
+            background: linear-gradient(to bottom, var(--jungle-light), var(--jungle-wood));
+            border: 4px solid var(--jungle-dark);
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.2), 0 4px 8px rgba(0,0,0,0.5);
+            border-radius: 1.5rem;
+        }
+
+        .wood-inset {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 1rem;
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.5);
+        }
+
+        .grid-cell {
+            aspect-ratio: 1 / 1;
+            background: linear-gradient(135deg, #7c4a1e 0%, #4d2e11 100%);
+            border: 3px solid #2d1b0d;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .grid-cell:hover {
+            filter: brightness(1.2);
+            transform: scale(1.02);
+        }
+
+        .dot {
+            width: 14px;
+            height: 14px;
+            background: radial-gradient(circle at 30% 30%, #fff, var(--jungle-yellow));
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.6);
+            margin: 2px;
+        }
+
+        .nav-button {
+            background: linear-gradient(to bottom, #facc15, #eab308);
+            border: 3px solid #713f12;
+            border-radius: 50px;
+            padding: 4px 16px;
+            font-weight: 600;
+            color: #452a10;
+            box-shadow: 0 4px 0 #713f12;
+            transition: all 0.1s;
+        }
+
+        .nav-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #713f12;
+        }
+
+        /* Jungle background elements */
+        .leaf {
+            position: absolute;
+            z-index: -1;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--jungle-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--jungle-light); border-radius: 4px; }
+    </style>
+</head>
+<body class="p-4">
+
+    <!-- Navbar -->
+    <nav class="wood-panel w-full h-16 mb-4 flex items-center justify-between px-6 flex-shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="bg-yellow-500 rounded-full p-2 border-2 border-yellow-800">
+                <i data-lucide="trophy" class="w-6 h-6 text-yellow-900"></i>
+            </div>
+            <span class="text-xl font-bold text-yellow-100 uppercase tracking-wider">Jungle Conquest</span>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div class="wood-inset px-4 py-1 flex items-center gap-2">
+                <i data-lucide="coins" class="w-4 h-4 text-yellow-400"></i>
+                <span class="font-bold">1,250</span>
+            </div>
+            <button class="nav-button">SHOP</button>
+            <div class="bg-red-500 rounded-full w-10 h-10 border-4 border-yellow-600 flex items-center justify-center">
+                <i data-lucide="settings" class="w-5 h-5 text-white"></i>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex flex-1 gap-4 overflow-hidden">
+        <!-- Sidebar Left (Stats) -->
+        <aside class="wood-panel w-64 p-4 flex flex-col gap-4">
+            <h3 class="text-yellow-400 uppercase text-xs font-bold tracking-widest text-center">Current Player</h3>
+            <div class="wood-inset p-4 flex flex-col items-center gap-2">
+                <div class="w-20 h-20 bg-green-900 rounded-full border-4 border-yellow-600 flex items-center justify-center overflow-hidden">
+                   <!-- Placeholder for Monkey Avatar -->
+                   <i data-lucide="user" class="w-12 h-12 text-green-300"></i>
+                </div>
+                <span class="font-bold text-lg">Primate King</span>
+            </div>
+
+            <div class="flex flex-col gap-2 mt-4">
+                <div class="flex justify-between items-center text-sm px-2">
+                    <span class="opacity-70 text-yellow-100">STRENGTH</span>
+                    <span class="text-green-400">85%</span>
+                </div>
+                <div class="w-full bg-black h-3 rounded-full overflow-hidden border border-yellow-900">
+                    <div class="bg-green-500 h-full w-[85%] shadow-[0_0_8px_#4ade80]"></div>
+                </div>
+
+                <div class="flex justify-between items-center text-sm px-2 mt-2">
+                    <span class="opacity-70 text-yellow-100">BANANAS</span>
+                    <span class="text-yellow-400">x12</span>
+                </div>
+            </div>
+
+            <div class="mt-auto">
+                <button class="w-full bg-red-800 border-b-4 border-red-950 py-3 rounded-xl font-bold hover:brightness-110 transition">
+                    SURRENDER
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Game Area -->
+        <main class="flex-1 wood-panel relative p-6 flex items-center justify-center overflow-auto">
+            <!-- Decorative leaves -->
+            <i data-lucide="leaf" class="leaf text-green-700 w-32 h-32 top-[-20px] left-[-20px] rotate-[45deg]"></i>
+            <i data-lucide="leaf" class="leaf text-green-800 w-24 h-24 bottom-[-10px] right-[-10px] rotate-[180deg]"></i>
+
+            <div id="game-grid" class="grid grid-cols-5 gap-3 max-w-2xl w-full">
+                <!-- Grid cells will be generated here -->
+            </div>
+        </main>
+
+        <!-- Sidebar Right (Info) -->
+        <aside class="wood-panel w-72 p-5 flex flex-col">
+            <h2 class="text-2xl font-bold text-yellow-400 mb-4 text-center">INVENTORY</h2>
+            <div class="wood-inset flex-1 p-3 flex flex-col gap-3">
+                <div class="flex items-center gap-3 p-2 border-b border-white/5">
+                    <div class="w-12 h-12 bg-yellow-600 rounded-lg flex items-center justify-center">
+                        <i data-lucide="zap" class="text-white"></i>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold">LUSH POWER</div>
+                        <div class="text-[10px] opacity-60">Boost grid capture rate</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 p-2 border-b border-white/5">
+                    <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <i data-lucide="shield" class="text-white"></i>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold">VINE SHIELD</div>
+                        <div class="text-[10px] opacity-60">Protects one cell for 1 turn</div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
+                    <p class="text-[11px] leading-relaxed text-yellow-100 italic">
+                        "The shop vibra-style: a lush green sanctuary with vines and secrets. Tap cells to deploy units (dots)."
+                    </p>
+                </div>
+            </div>
+            
+            <button class="mt-4 nav-button py-3 text-lg" id="action-btn">
+                END TURN
+            </button>
+        </aside>
+    </div>
+
+    <!-- Bottom Footer (Optional Small Labels) -->
+    <footer class="h-8 flex items-center justify-center gap-6 text-[10px] font-bold text-yellow-100/40 uppercase tracking-widest mt-2">
+        <span>Build v1.0.4</span>
+        <span>Mok Studios</span>
+        <span>Environment: Tropical</span>
+    </footer>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        const gridContainer = document.getElementById('game-grid');
+        const GRID_SIZE = 25; // 5x5
+        let gridState = new Array(GRID_SIZE).fill(0);
+
+        function createGrid() {
+            gridContainer.innerHTML = '';
+            for (let i = 0; i < GRID_SIZE; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                cell.dataset.index = i;
+                cell.onclick = () => handleCellClick(i);
+                updateCellDisplay(cell, gridState[i]);
+                gridContainer.appendChild(cell);
+            }
+        }
+
+        function handleCellClick(index) {
+            // Cycle through 0, 1, 2, 3 dots
+            gridState[index] = (gridState[index] + 1) % 4;
+            const cell = document.querySelector(`[data-index="${index}"]`);
+            updateCellDisplay(cell, gridState[index]);
+            
+            // Add a small bounce effect on click
+            cell.classList.add('scale-95');
+            setTimeout(() => cell.classList.remove('scale-95'), 100);
+        }
+
+        function updateCellDisplay(cell, count) {
+            cell.innerHTML = ''; // Clear dots
+            
+            if (count === 0) return;
+
+            // Simple flex layout for dots based on count
+            const dotContainer = document.createElement('div');
+            dotContainer.className = 'flex flex-wrap justify-center items-center w-full h-full p-2 gap-1';
+            
+            // 3 dots arranged in a triangle if possible, or just centered
+            for (let i = 0; i < count; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot animate-pulse';
+                // Randomize pulse duration for organic feel
+                dot.style.animationDuration = (1 + Math.random() * 2) + 's';
+                dotContainer.appendChild(dot);
+            }
+            
+            cell.appendChild(dotContainer);
+        }
+
+        // Initialize grid on load
+        window.onload = createGrid;
+
+        // Button feedback
+        document.getElementById('action-btn').addEventListener('click', () => {
+            console.log("Turn Ended. Grid State:", gridState);
+            // Visual feedback for end turn
+            const btn = document.getElementById('action-btn');
+            const originalText = btn.innerText;
+            btn.innerText = 'PROCESSING...';
+            btn.style.opacity = '0.7';
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.opacity = '1';
+            }, 800);
+        });
+    </script>
+</body>
+</html>

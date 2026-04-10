@@ -1,0 +1,87 @@
+.start-container {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Background Image */
+.background {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: url("/bg_green.jpg") no-repeat center center/cover;
+  animation: zoomIn 10s ease-in-out infinite alternate;
+}
+
+/* Soft glow overlay */
+.overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(0,255,150,0.1), rgba(0,0,0,0.6));
+}
+
+/* Title */
+.game-title {
+  position: absolute;
+  top: 20%;
+  width: 100%;
+  text-align: center;
+  font-size: 4rem;
+  color: #d4ffea;
+  text-shadow: 0 0 20px #00ffcc;
+  animation: fadeIn 2s ease-in-out;
+}
+
+/* Menu */
+.menu {
+  position: absolute;
+  bottom: 20%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  animation: fadeIn 2s ease-in-out;
+}
+
+.menu button {
+  width: 200px;
+  padding: 12px;
+  font-size: 18px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(0, 255, 150, 0.2);
+  color: white;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.menu button:hover {
+  background: rgba(0, 255, 150, 0.5);
+  transform: scale(1.05);
+}
+
+/* Animations */
+@keyframes zoomIn {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
