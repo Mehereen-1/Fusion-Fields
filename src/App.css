@@ -203,7 +203,7 @@ body {
   font-size: 0.78rem;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #ffe67e;
+  color: #ffffff;
   font-weight: 800;
 }
 
@@ -276,7 +276,7 @@ body {
 }
 
 .panel strong {
-  color: #ffe67e;
+  color: #ffb300;
 }
 
 .side-inset {
@@ -786,7 +786,7 @@ body {
   z-index: 1;
   width: min(860px, 92vw);
   padding: 30px;
-  color: #302213;
+  color: #ffffff;
 }
 
 .about-page__panel h2,
@@ -794,7 +794,7 @@ body {
   margin: 0;
   font-family: "Baloo 2", sans-serif;
   font-size: clamp(1.8rem, 4vw, 2.5rem);
-  color: #2f1f13;
+  color: #ffffff;
 }
 
 .about-page__actions,
@@ -820,15 +820,15 @@ body {
 }
 
 .winner-red {
-  color: #b43769;
+  color: #ffffff;
 }
 
 .winner-blue {
-  color: #2c7eaf;
+  color: #ffffff;
 }
 
 .winner-draw {
-  color: #3f3424;
+  color: #ffffff;
 }
 
 @keyframes orbPop {

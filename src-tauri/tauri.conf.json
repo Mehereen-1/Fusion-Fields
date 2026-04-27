@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "ai-farm-game",
+  "productName": "Color Wars",
   "version": "0.1.0",
-  "identifier": "com.user.ai-farm-game",
+  "identifier": "com.user.colorwars",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "ai-farm-game",
+        "title": "Color Wars",
         "width": 1440,
         "height": 920,
         "minWidth": 1200,

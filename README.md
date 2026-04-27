@@ -1,6 +1,6 @@
-# Tauri + React + Typescript
+# Color Wars
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+Color Wars is a Tauri, React, and TypeScript chain-reaction strategy game.
 
 ## Recommended IDE Setup
 

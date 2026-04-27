@@ -133,3 +133,69 @@
   50% { transform: translateX(-50%) scaleY(1.4); opacity: 1; }
   100% { transform: translateX(-50%) scaleY(1); opacity: 0.7; }
 }
+
+/* TRACE EXPORT BUTTONS */
+.trace-export-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(138, 255, 193, 0.2);
+}
+
+.trace-export-btn {
+  flex: 1;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #3b5a4e, #2a4038);
+  color: #8affc1;
+  border: 1.5px solid rgba(138, 255, 193, 0.4);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: all 0.25s cubic-bezier(0.3, 0.7, 0.4, 1);
+  text-transform: uppercase;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.trace-export-btn:hover {
+  background: linear-gradient(135deg, #4a8b70, #3a6d58);
+  border-color: #8affc1;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(138, 255, 193, 0.2);
+}
+
+.trace-export-btn:active {
+  transform: translateY(0px);
+  box-shadow: 0 2px 6px rgba(138, 255, 193, 0.3);
+}
+
+.trace-export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* DECISION PANEL - CLICKABLE */
+.decision-panel {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.decision-panel:hover {
+  background: rgba(138, 255, 193, 0.08);
+  border-radius: 8px;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(138, 255, 193, 0.1);
+}
+
+.decision-title {
+  margin: 0 0 10px 0;
+  color: #8affc1;
+  font-size: 14px;
+  font-weight: 700;
+}

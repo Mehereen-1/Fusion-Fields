@@ -11,9 +11,9 @@ export default function AboutScreen({ onBack, onStart }: AboutScreenProps) {
 
       <div className="about-page__panel glass-panel">
         <p className="eyebrow">About This Game</p>
-        <h2>Fusion Fields</h2>
+        <h2>Color War</h2>
         <p>
-          Fusion Fields is a tactical chain-reaction battle where each orb placement changes pressure on nearby
+          Color War is a tactical chain-reaction battle where each orb placement changes pressure on nearby
           cells. Build your territory, force overloads, and convert enemy positions through controlled splashes.
         </p>
         <p>

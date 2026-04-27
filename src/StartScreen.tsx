@@ -46,7 +46,7 @@ export default function StartScreen({ onStart, onAbout, onExit }: StartScreenPro
       <div className="overlay" />
 
       {/* Title */}
-      <h1 className="game-title">Mystic Forest</h1>
+      <h1 className="game-title">Color Wars</h1>
 
       {/* Menu */}
       {showMenu && (

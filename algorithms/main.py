@@ -13,7 +13,7 @@ except ImportError:  # pragma: no cover - fallback for script execution
 Cell = Dict[str, int]
 Board = List[List[Cell]]
 
-app = FastAPI(title="Color War AI Backend")
+app = FastAPI(title="Color Wars AI Backend")
 
 
 class MoveModel(BaseModel):

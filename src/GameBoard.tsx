@@ -3,7 +3,10 @@ import { useEffect, useRef, useState } from "react";
 import Cell from "./Cell";
 import { DecisionTrace, MinimaxTraceNode } from "./decisionTrace";
 import ExperimentPanel from "./ExperimentPanel";
+import TraceModal from "./TraceModal";
 import { ExperimentPreset, ExperimentSettings } from "./experiment";
+import { createGameSound } from "./gameSound";
+import { downloadTrace, copyTraceToClipboard } from "./traceExporter";
 import { BoardData, Move, Scores } from "./types";
 
 interface ComboPopup {
@@ -78,7 +81,12 @@ export default function GameBoard({
   const recentMoves = moveHistory.slice(-6).reverse();
   const validMoveSet = new Set(validMoveKeys);
   const [comboPopups, setComboPopups] = useState<ComboPopup[]>([]);
+  const [audioStarted, setAudioStarted] = useState(false);
+  const [isTraceModalOpen, setIsTraceModalOpen] = useState(false);
   const popupIdRef = useRef(0);
+  const soundRef = useRef(createGameSound());
+  const lastMoveRef = useRef<Move | null>(null);
+  const humanJustPlayedRef = useRef(false);
 
   const renderMinimaxTreeNode = (node: MinimaxTraceNode, path: string) => {
     const role = node.maximizing ? "MAX" : "MIN";
@@ -108,6 +116,33 @@ export default function GameBoard({
       </li>
     );
   };
+
+  useEffect(() => {
+    return () => {
+      soundRef.current.stopJungleAmbience();
+    };
+  }, []);
+
+  useEffect(() => {
+    // Detect AI moves and play sound
+    if (
+      audioStarted &&
+      lastMove &&
+      (!lastMoveRef.current ||
+        lastMove.row !== lastMoveRef.current.row ||
+        lastMove.col !== lastMoveRef.current.col)
+    ) {
+      lastMoveRef.current = lastMove;
+      
+      // Only play AI move sound if human didn't just play
+      if (!humanJustPlayedRef.current) {
+        soundRef.current.playMoveClick();
+      }
+      
+      // Reset the flag after checking
+      humanJustPlayedRef.current = false;
+    }
+  }, [audioStarted, lastMove]);
 
   useEffect(() => {
     if (explodingCells.length === 0) {
@@ -158,6 +193,27 @@ export default function GameBoard({
       })),
     ];
 
+    // Play sounds for the burst and chains
+    if (points.length > 1) {
+      soundRef.current.playCombo();
+    } else {
+      soundRef.current.playBurst();
+    }
+
+    popups.slice(1).forEach((_popup, index) => {
+      if (index === 0) {
+        // First impact
+        window.setTimeout(() => {
+          soundRef.current.playBurst();
+        }, 50);
+      } else {
+        // Chain reactions
+        window.setTimeout(() => {
+          soundRef.current.playChainImpact();
+        }, 100 + index * 80);
+      }
+    });
+
     setComboPopups((previous) => [...previous, ...popups]);
 
     const timer = window.setTimeout(() => {
@@ -167,11 +223,26 @@ export default function GameBoard({
     return () => window.clearTimeout(timer);
   }, [board.length, explodingCells]);
 
+  const handleCellClick = (row: number, col: number) => {
+    // Start audio on first interaction (browser autoplay policy)
+    if (!audioStarted) {
+      soundRef.current.prime().catch(() => {
+        // Audio context may not be supported
+      });
+      soundRef.current.startJungleAmbience();
+      setAudioStarted(true);
+    }
+
+    soundRef.current.playMoveClick();
+    humanJustPlayedRef.current = true;
+    onCellClick(row, col);
+  };
+
   return (
     <div className="game-wrapper">
       <div className="top-bar market-card">
         <div>
-          <p className="chip-label">Fusion Fields</p>
+          <p className="chip-label">Color Wars</p>
           <h1>Fire the colors</h1>
         </div>
         <div className="top-actions">
@@ -293,7 +364,7 @@ export default function GameBoard({
                       isExploding={explodingCells.includes(key)}
                       waveDelayStep={Math.max(waveIndex, 0)}
                       moveHintState={showMoveHints ? (canPlay ? "valid" : "invalid") : "none"}
-                      onClick={onCellClick}
+                      onClick={handleCellClick}
                     />
                   );
                 }),
@@ -348,7 +419,7 @@ export default function GameBoard({
               )}
             </ul>
 
-            <div className="decision-panel">
+            <div className="decision-panel" onClick={() => decisionTrace && setIsTraceModalOpen(true)}>
               <p className="decision-title">Decision Simulation</p>
               {!decisionTrace ? (
                 <p className="decision-empty">Waiting for AI decision...</p>
@@ -394,6 +465,36 @@ export default function GameBoard({
                   </ul>
                 </>
               )}
+              {/* TODO: Export buttons - commented out for now
+              {decisionTrace && (
+                <div className="trace-export-buttons">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      downloadTrace(decisionTrace);
+                    }}
+                    className="trace-export-btn"
+                    title="Download full trace as JSON"
+                  >
+                    📥 Download JSON
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (copyTraceToClipboard(decisionTrace)) {
+                        alert("Trace copied to clipboard!");
+                      } else {
+                        alert("Failed to copy trace");
+                      }
+                    }}
+                    className="trace-export-btn"
+                    title="Copy trace to clipboard"
+                  >
+                    📋 Copy JSON
+                  </button>
+                </div>
+              )}
+              */}
             </div>
           </div>
         </aside>
@@ -401,7 +502,13 @@ export default function GameBoard({
 
       <div className="bottom-bar market-card">
         <p>Tip: opening move must be played on an empty cell.</p>
-        </div>
+      </div>
+
+      <TraceModal 
+        trace={decisionTrace} 
+        isOpen={isTraceModalOpen} 
+        onClose={() => setIsTraceModalOpen(false)} 
+      />
     </div>
   );
 }
